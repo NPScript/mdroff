@@ -1,0 +1,30 @@
+#!/bin/sh
+
+whole_file=$(cat $1)
+header=$(echo "$whole_file" | grep -e '---' -Tn | awk '{ print $1 }' | sed 's/://g')
+
+# Parse Content
+[ -n "$header" ] && content=$(echo "$whole_file" | tail -n $(($(echo "$whole_file" | wc -l) - $(echo "$header" | tail -n1)))) || content="$whole_file"
+
+content=$(echo "$content" | sed -e 's/^# \(.*\)/.NH\n\1/g' -e 's/^## \(.*\)/.NH 2\n\1/g' -e 's/^### \(.*\)/.NH 3\n\1/g' -e 's/^#### \(.*\)/.NH 4\n\1/g' -e 's/^##### \(.*\)/.NH 5\n\1/g' -e 's/^###### \(.*\)/.NH 6\n\1/g' -e 's/^$/.PP/g' |
+	sed -z 's/.PP\n.NH/.NH/g' |
+	sed -z 's/\(.PP\n\)\{2,\}/.PP\n/g' |
+	sed -e 's/[*_]\{3\}\([^*-]*\)[*_]\{3\}\(.\)\{0,1\}/\n.BI "\1" \2\n/g' |
+	sed -e 's/[*_]\{2\}\([^*-]*\)[*_]\{2\}\(.\)\{0,1\}/\n.B "\1" \2\n/g' |
+	sed -e 's/[*_]\([^*-]*\)[*_]\(.\)\{0,1\}/\n.I "\1" \2\n/g' |
+	sed -e 's/^``` math$/.EQ/g' -e 's/^```$/.EN/g' |
+	sed '/^$/d')
+
+# Parse Header
+[ "$(echo "$header" | head -n 1)" = "1" ] && header=$(echo "$whole_file" | head -n $(echo "$header" | tail -n 1) | sed '/^---$/d')
+
+[ -n "$header" ] && title=$(echo "$header" | grep title | sed 's/title: //g')
+[ -n "$header" ] && author=$(echo "$header" | grep author | sed 's/author: //g')
+[ -n "$header" ] && date=$(echo "$header" | grep date | sed 's/date: //g')
+
+
+[ -n "$header" ] && printf ".RP no\n"
+[ -n "$title" ] && printf ".TL\n$title\n"
+[ -n "$author" ] && printf ".AU\n$author\n"
+[ -n "$date" ] && printf ".DA\n$date\n"
+printf "$content\n"
