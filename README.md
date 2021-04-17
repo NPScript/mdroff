@@ -7,7 +7,7 @@ If you use `eqn` you can use the *math*-context:
 ``` markdown
 ``` math
 psi~''~left ( x right ) + { 8 cdot pi sup 2 cdot m } over h sup 2 cdot E cdot psi~left ( x right ) = 0
-```
+\```
 ```
 
 ## How to get a PDF
